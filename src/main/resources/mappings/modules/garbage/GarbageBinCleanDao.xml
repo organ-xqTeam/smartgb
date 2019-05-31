@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.garbage.dao.GarbageBinCleanDao">
+	
+	<sql id="gbCleanColumns">
+		a.id AS "id",
+		a.dtu_id AS "dtu_id",
+		a.garbage_many AS "garbageMany",
+		a.position AS "position",
+		a.clean_date AS "cleanDate",
+		a.create_date AS "createDate"
+	</sql>
+	
+	<select id="get" resultType="com.thinkgem.jeesite.modules.garbage.entity.GarbageBinClean">
+		SELECT 
+			<include refid="gbCleanColumns"/>
+		FROM smart_garbagebin_clean a WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="com.thinkgem.jeesite.modules.garbage.entity.GarbageBinClean">
+		SELECT 
+			<include refid="gbCleanColumns"/>
+		FROM smart_garbagebin_clean a
+		<where>
+			del_flag = #{DEL_FLAG_NORMAL}
+			<if test="dtuId != null and dtuId != ''">
+				AND a.dtu_id LIKE 
+					<if test="dbName == 'oracle'">'%'||#{realName}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{realName}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{dtuId},'%')</if>
+			</if>
+			<if test="cleanDateStart != null">
+				AND a.clean_date &gt;= #{cleanDateStart}
+			</if>
+			<if test="cleanDateEnd != null">
+				AND a.clean_date &lt;= #{cleanDateEnd}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<update id="delete">
+		UPDATE smart_garbagebin_clean SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+</mapper>

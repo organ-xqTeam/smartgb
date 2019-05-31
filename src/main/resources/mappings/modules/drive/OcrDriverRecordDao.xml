@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.drive.dao.OcrDriverRecordDao">
+	
+	<sql id="driveRecordColumns">
+		a.id AS "id",
+		a.car_id AS "carId",
+		a.plate_num AS "plateNum",
+		a.go_date AS "goDate",
+		a.arrive_date AS "arriveDate",
+		a.car_band AS "carBand",
+		a.oil_num AS "oilNum",
+		a.create_date AS "createDate"
+	</sql>
+	
+	<select id="get" resultType="com.thinkgem.jeesite.modules.drive.entity.OcrDriverRecord">
+		SELECT 
+			<include refid="driveRecordColumns"/>
+		FROM ocr_driver_record a WHERE a.car_id = #{id}
+	</select>
+	
+	<select id="getVO" resultType="com.thinkgem.jeesite.modules.drive.entity.OcrDriverRecord">
+		SELECT 
+			<include refid="driveRecordColumns"/>
+		FROM ocr_driver_record a WHERE a.car_id = #{carId}
+	</select>
+	
+	<select id="findList" resultType="com.thinkgem.jeesite.modules.drive.entity.OcrDriverRecord">
+		SELECT 
+			<include refid="driveRecordColumns"/>
+		FROM ocr_driver_record a
+		<where>
+			1 = 1
+			<if test="recordDateStar != null">
+				AND a.go_date &gt;= #{recordDateStar}
+			</if>
+			<if test="recordDateEnd != null">
+				AND a.go_date &lt;= #{recordDateEnd}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.go_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+</mapper>

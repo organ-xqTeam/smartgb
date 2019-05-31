@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.drive.dao.OcrCarInfoDao">
+    
+	<sql id="ocrCarInfoColumns">
+		a.id AS "id",
+		a.car_band AS "carBand",
+		a.plate_num AS "plateNum",
+		a.terminal_phone AS "terminalPhone",
+		a.is_delete AS "isDelete",
+		a.create_date AS "createDate"
+	</sql>
+	
+	<select id="get" resultType="OcrCarInfo">
+		SELECT 
+			<include refid="ocrCarInfoColumns"/>
+		FROM ocr_car_info a 
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="OcrCarInfo">
+		SELECT 
+			<include refid="ocrCarInfoColumns"/>
+		FROM ocr_car_info a 
+		<where>
+			a.is_delete = 0 
+			<if test="carBand != null and carBand != ''">
+				AND a.car_band LIKE concat('%',#{carBand},'%') 
+			</if>
+			<if test="plateNum != null and plateNum != ''">
+				AND a.plate_num LIKE concat('%',#{plateNum},'%') 
+			</if>
+			<if test="terminalPhone != null and terminalPhone != ''">
+				AND a.terminal_phone LIKE concat('%',#{terminalPhone},'%') 
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO ocr_car_info(
+			car_band,
+			plate_num,
+			terminal_phone,
+			is_delete,
+			create_date
+		) VALUES (
+			#{carBand},
+			#{plateNum},
+			#{terminalPhone},
+			#{isDelete},
+			#{createDate}
+		)
+	</insert>
+	
+	<update id="delete">
+		UPDATE ocr_car_info SET 
+			is_delete = 1
+		WHERE id = #{id}
+	</update>
+	
+</mapper>

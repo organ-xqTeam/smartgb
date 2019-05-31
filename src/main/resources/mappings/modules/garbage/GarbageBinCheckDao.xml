@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.garbage.dao.GarbageBinInfoDao">
+	
+	<sql id="gbInfoColumns">
+		a.dtu_id AS "dtu_id",
+		a.garbage_many AS "garbageMany",
+		a.garbage_total AS "garbageTotal",
+		a.position AS "position",
+		a.latitude AS "latitude",
+		a.longitude AS "longitude",
+		a.connect_state AS "connectState",
+		a.monitor_state AS "monitorState",
+		a.gps_state AS "gpsState",
+		a.create_date AS "createDate",
+		a.update_date AS "updateDate"
+	</sql>
+	
+	<select id="get" resultType="com.thinkgem.jeesite.modules.garbage.entity.GarbageBinInfo">
+		SELECT 
+			<include refid="gbInfoColumns"/>
+		FROM smart_garbagebin_info a WHERE a.dtu_id = #{dtuId}
+	</select>
+	
+	<select id="findList" resultType="com.thinkgem.jeesite.modules.garbage.entity.GarbageBinInfo">
+		SELECT 
+			<include refid="gbInfoColumns"/>
+		FROM smart_garbagebin_info a
+		<where>
+			1 = 1
+			<if test="dtuId != null and dtuId != ''">
+				AND a.dtu_id LIKE 
+					<if test="dbName == 'oracle'">'%'||#{realName}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{realName}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{dtuId},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findListByIds" resultType="com.thinkgem.jeesite.modules.garbage.entity.GarbageBinInfo">
+		SELECT 
+			<include refid="gbInfoColumns"/>
+		FROM smart_garbagebin_info a WHERE a.dtu_id in (${_parameter})
+	</select>
+</mapper>

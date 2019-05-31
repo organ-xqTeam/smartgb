@@ -1,0 +1,526 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.order.dao.OcrOrderDao">
+
+	<update id="batchUpdateStatus" parameterType="java.util.List">
+		update ocr_order set
+		status="1"
+		where id in
+		<foreach collection="list" index="index" item="item" open="("
+			separator="," close=")">
+			#{item.id}
+		</foreach>
+	</update>  
+
+	<resultMap id="OcrOrderVOMap" type="OcrOrderVO">
+		<id property="id" column="id" />
+		<result property="companyId" column="companyId" />
+		<result property="vehicleType" column="vehicleType" />
+		<result property="paymentMode" column="paymentMode" />
+		<result property="cost" column="cost" />
+		<result property="user.id" column="user.id" />
+		<result property="user.realName" column="user.realName" />
+		<result property="user.jobNumber" column="user.jobNumber" />
+		<result property="peopleNumber" column="peopleNumber" />
+		<result property="appearPurpose" column="appearPurpose" />
+		<result property="status" column="status" />
+		<result property="driver.id" column="driver.id" />
+		<result property="driver.realName" column="driver.realName" />
+		<result property="driver.jobNumber" column="driver.jobNumber" />
+		<result property="driver.phone" column="driver.phone" />
+		<result property="departurePlace" column="departurePlace" />
+		<result property="destination" column="destination" />
+		<result property="departureDate" column="departureDate" />
+		<result property="planArrivalDate" column="planArrivalDate" />
+		<result property="realDepartureDate" column="realDepartureDate" />
+		<result property="realArrivalDate" column="realArrivalDate" />
+		<result property="reason" column="reason" />
+		<result property="createBy.id" column="createBy.id" />
+		<result property="createDate" column="createDate" />
+		<result property="updateBy.id" column="updateBy.id" />
+		<result property="updateDate" column="updateDate" />
+		<result property="remarks" column="remarks" />
+		<result property="delFlag" column="delFlag" />
+		<result property="vehicle.id" column="vehicle.id" />
+		<result property="vehicle.brandModels" column="vehicle.brandModels" />
+		<result property="vehicle.licensePlateNumber" column="vehicle.licensePlateNumber" />
+		<result property="vehicle.equipmentImei" column="vehicle.equipmentImei" />
+		<result property="taskStatus" column="taskStatus" />
+		</resultMap>
+		
+		
+	<select id="findVoById" resultMap="OcrOrderVOMap">
+		SELECT
+		a.id,
+		a.status,
+		a.departure_place AS "departurePlace",
+		a.destination,
+		a.plan_arrival_date AS "planArrivalDate",
+		a.real_departure_date AS "realDepartureDate",
+		a.real_arrival_date AS "realArrivalDate",
+		b.real_name AS "driver.realName",
+		b.job_number AS "driver.jobNumber",
+		b.phone AS "driver.phone",
+		c.id AS "vehicle.id",
+		c.brand_models AS "vehicle.brandModels",
+		c.license_plate_number AS "vehicle.licensePlateNumber",
+		c.equipment_imei AS "vehicle.equipmentImei"
+		FROM
+			ocr_order a
+		LEFT JOIN ocr_driver b ON b.id = a.driver_id
+		LEFT JOIN ocr_task t ON t.order_id = a.id
+		LEFT JOIN ocr_vehicle c ON c.id = t.vehicle_id
+		WHERE
+		a.id = #{id}
+		</select>
+	
+	<select id="findVOList" resultMap="OcrOrderVOMap">
+		SELECT 
+		a.id AS "id",
+		a.company_id AS "companyId",
+		a.vehicle_type AS "vehicleType",
+		a.payment_mode AS "paymentMode",
+		a.cost AS "cost",
+		a.user_id AS "user.id",
+		a.phone AS "phone",
+		u.real_name AS "user.realName",
+		u.job_number AS "user.jobNumber",
+		a.people_number AS "peopleNumber",
+		a.appear_purpose AS "appearPurpose",
+		a.status AS "status",
+		a.driver_id AS "driver.id",
+		d.real_name AS "driver.realName",
+		d.job_number AS "driver.jobNumber",
+		d.phone AS "driver.phone",
+		a.departure_place AS "departurePlace",
+		a.destination AS "destination",
+		a.departure_date AS "departureDate",
+		a.plan_arrival_date AS "planArrivalDate",
+		a.reason AS "reason",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		v.id AS "vehicle.id",
+		v.brand_models AS "vehicle.brandModels",
+		v.license_plate_number AS "vehicle.licensePlateNumber"
+		FROM ocr_order a
+		LEFT JOIN ocr_user u ON u.id = a.user_id
+		LEFT JOIN ocr_driver d ON d.id = a.driver_id	
+		LEFT JOIN ocr_task t ON t.order_id = a.id
+		LEFT JOIN ocr_vehicle v ON v.id = t.vehicle_id
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="companyId != null and companyId != ''">
+				AND a.company_id = #{companyId}
+			</if>
+			<if test="status != null and status != ''">
+                <choose>
+                    <when test="status == 'all'">
+                        AND (a.status = '1'
+                        OR a.status = '2'
+                        OR a.status = '3'
+                        OR a.status = '4'
+                        OR a.status = '5'
+                        OR a.status = '6'
+                        OR a.status = '7')
+                       </when>
+                    <otherwise>
+                        AND a.status = #{status}
+                    </otherwise>
+                </choose>
+              </if>
+			<if test="beginDepartureDate != null and beginDepartureDate != ''">
+			<![CDATA[ 
+			AND a.departure_date >= #{beginDepartureDate} 
+			 ]]>     
+			</if>
+				<if test="endDepartureDate != null and endDepartureDate != ''">
+			<![CDATA[ 
+				AND a.departure_date <= #{endDepartureDate}
+			]]>     
+			</if>
+			
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	<select id="findVOListForCompany" resultMap="OcrOrderVOMap">
+        SELECT 
+        a.id AS "id",
+        a.company_id AS "companyId",
+        a.vehicle_type AS "vehicleType",
+        a.payment_mode AS "paymentMode",
+        a.cost AS "cost",
+        a.user_id AS "user.id",
+        a.phone AS "phone",
+        u.real_name AS "user.realName",
+        u.job_number AS "user.jobNumber",
+        a.people_number AS "peopleNumber",
+        a.appear_purpose AS "appearPurpose",
+        a.status AS "status",
+        a.driver_id AS "driver.id",
+        d.real_name AS "driver.realName",
+        d.job_number AS "driver.jobNumber",
+        d.phone AS "driver.phone",
+        a.departure_place AS "departurePlace",
+        a.destination AS "destination",
+        a.departure_date AS "departureDate",
+        a.plan_arrival_date AS "planArrivalDate",
+        a.reason AS "reason",
+        a.create_by AS "createBy.id",
+        a.create_date AS "createDate",
+        a.update_by AS "updateBy.id",
+        a.update_date AS "updateDate",
+        a.remarks AS "remarks",
+        a.del_flag AS "delFlag",
+        v.id AS "vehicle.id",
+        v.brand_models AS "vehicle.brandModels",
+        v.license_plate_number AS "vehicle.licensePlateNumber",
+        t.status AS "taskStatus"
+        FROM ocr_order a
+        LEFT JOIN ocr_user u ON u.id = a.user_id
+        LEFT JOIN ocr_driver d ON d.id = a.driver_id    
+        LEFT JOIN ocr_task t ON t.order_id = a.id
+        LEFT JOIN ocr_vehicle v ON v.id = t.vehicle_id
+        <where>
+            a.del_flag = #{DEL_FLAG_NORMAL}
+            <if test="companyId != null and companyId != ''">
+                AND a.company_id = #{companyId}
+            </if>
+            <if test="status != null and status != ''">
+                <choose>
+                     <when test="status == 'all'">
+                        AND (
+                        a.status = '0'
+                        OR a.status = '1'
+                        OR a.status = '2'
+                        OR a.status = '3'
+                        OR a.status = '4'
+                        OR a.status = '5'
+                        OR a.status = '6'
+                        OR a.status = '7'
+                        OR a.status = '8'
+                        OR a.status = '9'
+                        )                   
+                        </when>
+                        <when test="status == 'pass'">
+                        AND (
+                        a.status = '1'
+                        OR a.status = '2'
+                        OR (a.status = '3'
+                        AND t.status = '1'
+                        )
+                        )
+                        </when>
+                        <when test="status == '7'">
+                        AND (
+                        a.status = '7'
+                        OR a.status = '9'
+                        )
+                        </when>
+                        <when test="status == '3'">
+                        AND (
+                        a.status = '3'
+                        AND a.status = '2'
+                        )
+                        </when>
+                    <otherwise>
+                        AND a.status = #{status}
+                    </otherwise>
+                </choose>
+              </if>
+            <if test="beginDepartureDate != null and beginDepartureDate != ''">
+            <![CDATA[ 
+            AND a.departure_date >= #{beginDepartureDate} 
+             ]]>     
+            </if>
+                <if test="endDepartureDate != null and endDepartureDate != ''">
+            <![CDATA[ 
+                AND a.departure_date <= #{endDepartureDate}
+            ]]>     
+            </if>
+            
+        </where>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.create_date DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    
+     <select id="findVOListForApprove" resultMap="OcrOrderVOMap">
+        SELECT 
+        a.id AS "id",
+        a.company_id AS "companyId",
+        a.vehicle_type AS "vehicleType",
+        a.payment_mode AS "paymentMode",
+        a.cost AS "cost",
+        a.user_id AS "user.id",
+        a.phone AS "phone",
+        u.real_name AS "user.realName",
+        u.job_number AS "user.jobNumber",
+        u.login_name AS "user.loginName",
+        a.people_number AS "peopleNumber",
+        a.appear_purpose AS "appearPurpose",
+        a.status AS "status",
+        a.driver_id AS "driver.id",
+        d.real_name AS "driver.realName",
+        d.job_number AS "driver.jobNumber",
+        d.phone AS "driver.phone",
+        a.departure_place AS "departurePlace",
+        a.destination AS "destination",
+        a.departure_date AS "departureDate",
+        a.plan_arrival_date AS "planArrivalDate",
+        a.reason AS "reason",
+        a.create_by AS "createBy.id",
+        a.create_date AS "createDate",
+        a.update_by AS "updateBy.id",
+        a.update_date AS "updateDate",
+        a.remarks AS "remarks",
+        a.del_flag AS "delFlag",
+        v.id AS "vehicle.id",
+        v.brand_models AS "vehicle.brandModels",
+        v.license_plate_number AS "vehicle.licensePlateNumber"
+        FROM ocr_order a
+        LEFT JOIN ocr_user u ON u.id = a.user_id
+        LEFT JOIN ocr_driver d ON d.id = a.driver_id    
+        LEFT JOIN ocr_task t ON t.order_id = a.id
+        LEFT JOIN ocr_vehicle v ON v.id = t.vehicle_id
+        <where>
+            a.del_flag = #{DEL_FLAG_NORMAL}
+            <if test="companyId != null and companyId != ''">
+                AND a.company_id = #{companyId}
+            </if>
+            <if test="status != null and status != ''">
+                <choose>
+                     <when test="status == 'all'">
+                        AND (a.status = '0'
+                        OR a.status = '1'
+                        OR a.status = '2'
+                        OR a.status = '3'
+                        OR a.status = '4'
+                        OR a.status = '5'
+                        OR a.status = '6'
+                        OR a.status = '7'
+                        OR a.status = '8'
+                        OR a.status = '9')                   
+                        </when>
+                        <when test="status == 'pass'">
+                        AND (
+                        a.status = '1'
+                        OR a.status = '2'
+                        OR a.status = '3'
+                        OR a.status = '4'
+                        OR a.status = '5'
+                        OR a.status = '6'
+                        OR a.status = '7'
+                        OR a.status = '9')                   
+                        </when>
+                         <otherwise>
+                        AND a.status = #{status}
+                    </otherwise>
+                </choose>
+              </if>
+            <if test="beginDepartureDate != null and beginDepartureDate != ''">
+            <![CDATA[ 
+            AND a.departure_date >= #{beginDepartureDate} 
+             ]]>     
+            </if>
+                <if test="endDepartureDate != null and endDepartureDate != ''">
+            <![CDATA[ 
+                AND a.departure_date <= #{endDepartureDate}
+            ]]>     
+            </if>
+            
+        </where>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.create_date DESC
+            </otherwise>
+        </choose>
+    </select>
+    
+    
+	<sql id="ocrOrderColumns">
+		a.id AS "id",
+		a.company_id AS "companyId",
+		a.vehicle_type AS "vehicleType",
+		a.payment_mode AS "paymentMode",
+		a.cost AS "cost",
+		a.user_id AS "userId",
+		a.people_number AS "peopleNumber",
+		a.appear_purpose AS "appearPurpose",
+		a.status AS "status",
+		a.driver_id AS "driverId",
+		a.departure_place AS "departurePlace",
+		a.destination AS "destination",
+		a.departure_date AS "departureDate",
+		a.plan_arrival_date AS "planArrivalDate",
+		a.reason AS "reason",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="ocrOrderJoins">
+	</sql>
+    
+	<select id="get" resultType="OcrOrder">
+		SELECT 
+			<include refid="ocrOrderColumns"/>
+		FROM ocr_order a
+		<include refid="ocrOrderJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	
+	
+	<select id="findList" resultType="OcrOrder">
+		SELECT 
+			<include refid="ocrOrderColumns"/>
+		FROM ocr_order a
+		<include refid="ocrOrderJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="companyId != null and companyId != ''">
+				AND a.company_id = #{companyId}
+			</if>
+			<if test="status != null and status != ''">
+				AND a.status = #{status}
+			</if>
+			<if test="beginDepartureDate != null and beginDepartureDate != ''">
+			<![CDATA[ 
+			AND a.departure_date >= #{beginDepartureDate} 
+			 ]]>     
+			</if>
+				<if test="endDepartureDate != null and endDepartureDate != ''">
+			<![CDATA[ 
+				AND a.departure_date <= #{endDepartureDate}
+			]]>     
+			</if>
+			
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="OcrOrder">
+		SELECT 
+			<include refid="ocrOrderColumns"/>
+		FROM ocr_order a
+		<include refid="ocrOrderJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO ocr_order(
+			id,
+			company_id,
+			vehicle_type,
+			payment_mode,
+			cost,
+			user_id,
+			people_number,
+			appear_purpose,
+			status,
+			driver_id,
+			departure_place,
+			destination,
+			departure_date,
+			plan_arrival_date,
+			reason,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{companyId},
+			#{vehicleType},
+			#{paymentMode},
+			#{cost},
+			#{userId},
+			#{peopleNumber},
+			#{appearPurpose},
+			#{status},
+			#{driverId},
+			#{departurePlace},
+			#{destination},
+			#{departureDate},
+			#{planArrivalDate},
+			#{reason},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE ocr_order SET 	
+			company_id = #{companyId},
+			vehicle_type = #{vehicleType},
+			payment_mode = #{paymentMode},
+			cost = #{cost},
+			user_id = #{userId},
+			people_number = #{peopleNumber},
+			appear_purpose = #{appearPurpose},
+			status = #{status},
+			driver_id = #{driverId},
+			departure_place = #{departurePlace},
+			destination = #{destination},
+			departure_date = #{departureDate},
+			plan_arrival_date = #{planArrivalDate},
+			reason = #{reason},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE ocr_order SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+</mapper>

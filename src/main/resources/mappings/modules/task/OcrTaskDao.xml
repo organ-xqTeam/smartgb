@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.task.dao.OcrTaskDao">
+
+
+<update id="batchUpdateStatus" parameterType="java.util.List">
+	update ocr_task set
+	status="3"
+	where id in
+	<foreach collection="list" index="index" item="item" open="("
+		separator="," close=")">
+		#{item.id}
+	</foreach>
+</update>  
+
+    <select id="findListAndOrderStatus" resultType="OcrTaskOrderVO">
+        SELECT 
+        a.id AS "id",
+        a.order_id AS "orderId",
+        a.vehicle_id AS "vehicleId",
+        a.driver_id AS "driverId",
+        a.status AS "status",
+        a.create_by AS "createBy.id",
+        a.create_date AS "createDate",
+        a.update_by AS "updateBy.id",
+        a.update_date AS "updateDate",
+        a.remarks AS "remarks",
+        a.del_flag AS "delFlag",
+        b.status AS "orderStatus"
+        FROM ocr_task a
+        LEFT JOIN ocr_order b ON b.id = a.order_id
+        <where>
+            a.del_flag = #{DEL_FLAG_NORMAL}
+        <if test="status != null and status != ''">
+                AND a.status = #{status}
+            </if>
+        </where>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.update_date DESC
+            </otherwise>
+        </choose>
+    </select>
+    
+	<sql id="ocrTaskColumns">
+		a.id AS "id",
+		a.order_id AS "orderId",
+		a.vehicle_id AS "vehicleId",
+		a.driver_id AS "driverId",
+		a.status AS "status",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="ocrTaskJoins">
+	</sql>
+    
+	<select id="get" resultType="OcrTask">
+		SELECT 
+			<include refid="ocrTaskColumns"/>
+		FROM ocr_task a
+		<include refid="ocrTaskJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	   <select id="getByOrderId" resultType="OcrTask">
+        SELECT 
+            <include refid="ocrTaskColumns"/>
+        FROM ocr_task a
+        <include refid="ocrTaskJoins"/>
+        WHERE a.order_id = #{orderId}
+    </select>
+	
+	<select id="findList" resultType="OcrTask">
+		SELECT 
+			<include refid="ocrTaskColumns"/>
+		FROM ocr_task a
+		<include refid="ocrTaskJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		<if test="status != null and status != ''">
+                AND a.status = #{status}
+            </if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="OcrTask">
+		SELECT 
+			<include refid="ocrTaskColumns"/>
+		FROM ocr_task a
+		<include refid="ocrTaskJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO ocr_task(
+			id,
+			order_id,
+			vehicle_id,
+			driver_id,
+			status,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{orderId},
+			#{vehicleId},
+			#{driverId},
+			#{status},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE ocr_task SET 	
+			order_id = #{orderId},
+			vehicle_id = #{vehicleId},
+			driver_id = #{driverId},
+			status = #{status},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE ocr_task SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<select id="getOcrTaskVOListByDriver" resultType="OcrTask">
+		SELECT 
+			a.id AS "id",
+			t2.departure_date AS "departureDate",
+			t2.departure_place AS "departurePlace",
+			t2.destination AS "destination",
+			t2.plan_arrival_date AS "planArrivalDate",
+			t2.vehicle_type AS "vehicleType",
+			t3.brand_models AS "brandModels",
+			t3.license_plate_number AS "licensePlateNumber",
+			t3.seat_count AS "seatCount"
+		FROM ocr_task a
+		LEFT JOIN ocr_order t2 ON a.order_id = t2.id
+		LEFT JOIN ocr_vehicle t3 ON a.vehicle_id = t3.id
+		WHERE a.driver_id = #{id}
+		AND a.status IN (2,4)
+	</select>
+	
+	<select id="getOcrTaskVOListByVehicle" resultType="OcrTask">
+		SELECT 
+			a.id AS "id",
+			t2.departure_date AS "departureDate",
+			t2.departure_place AS "departurePlace",
+			t2.destination AS "destination",
+			t2.plan_arrival_date AS "planArrivalDate",
+			t2.vehicle_type AS "vehicleType",
+			t3.brand_models AS "brandModels",
+			t3.license_plate_number AS "licensePlateNumber",
+			t3.seat_count AS "seatCount"
+		FROM ocr_task a
+		LEFT JOIN ocr_order t2 ON a.order_id = t2.id
+		LEFT JOIN ocr_vehicle t3 ON a.vehicle_id = t3.id
+		WHERE a.vehicle_id = #{id}
+		AND a.status IN (2,4)
+	</select>
+	
+</mapper>

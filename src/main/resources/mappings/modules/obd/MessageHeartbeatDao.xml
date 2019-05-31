@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.obd.dao.MessageHeartbeatDao">
+    
+	<sql id="messageHeartbeatColumns">
+		a.id AS "id",
+		a.car_id AS "carId",
+		a.gps_status AS "gpsStatus",
+		a.acc_status AS "accStatus",
+		a.defence_status AS "defenceStatus",
+		a.oil_electricity_status AS "oilElectricityStatus",
+		a.charge_status AS "chargeStatus",
+		a.unused AS "unused",
+		a.input_port AS "inputPort",
+		a.sequence_number AS "sequenceNumber",
+		a.create_time AS "createTime"
+	</sql>
+	
+	<sql id="messageHeartbeatJoins">
+	</sql>
+    
+	<select id="get" resultType="MessageHeartbeat">
+		SELECT 
+			<include refid="messageHeartbeatColumns"/>
+		FROM message_heartbeat a
+		<include refid="messageHeartbeatJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="MessageHeartbeat">
+		SELECT 
+			<include refid="messageHeartbeatColumns"/>
+		FROM message_heartbeat a
+		<include refid="messageHeartbeatJoins"/>
+		<where>
+			
+			<if test="carId != null and carId != ''">
+				AND a.car_id = #{carId}
+			</if>
+			<if test="createTime != null and createTime != ''">
+				AND a.create_time &gt;= #{createTime}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="MessageHeartbeat">
+		SELECT 
+			<include refid="messageHeartbeatColumns"/>
+		FROM message_heartbeat a
+		<include refid="messageHeartbeatJoins"/>
+		<where>
+			
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO message_heartbeat(
+			id,
+			car_id,
+			gps_status,
+			acc_status,
+			defence_status,
+			oil_electricity_status,
+			charge_status,
+			unused,
+			input_port,
+			sequence_number,
+			create_time
+		) VALUES (
+			#{id},
+			#{carId},
+			#{gpsStatus},
+			#{accStatus},
+			#{defenceStatus},
+			#{oilElectricityStatus},
+			#{chargeStatus},
+			#{unused},
+			#{inputPort},
+			#{sequenceNumber},
+			#{createTime}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE message_heartbeat SET 	
+			car_id = #{carId},
+			gps_status = #{gpsStatus},
+			acc_status = #{accStatus},
+			defence_status = #{defenceStatus},
+			oil_electricity_status = #{oilElectricityStatus},
+			charge_status = #{chargeStatus},
+			unused = #{unused},
+			input_port = #{inputPort},
+			sequence_number = #{sequenceNumber},
+			create_time = #{createTime}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		DELETE FROM message_heartbeat
+		WHERE id = #{id}
+	</update>
+	
+</mapper>
