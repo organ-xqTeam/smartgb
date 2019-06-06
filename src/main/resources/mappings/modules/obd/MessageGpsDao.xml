@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.obd.dao.MessageGpsDao">
+    
+	<sql id="messageGpsColumns">
+		a.id AS "id",
+		a.car_id AS "carId",
+		a.car_time AS "carTime",
+		a.latitude AS "latitude",
+		a.longitude AS "longitude",
+		a.speed AS "speed",
+		a.direction AS "direction",
+		a.base_station AS "baseStation",
+		a.gps_locate_status AS "gpsLocateStatus",
+		a.device_status AS "deviceStatus",
+		a.battery_voltage AS "batteryVoltage",
+		a.signal_intensity AS "signalIntensity",
+		a.analog_input_one AS "analogInputOne",
+		a.analog_input_two AS "analogInputTwo",
+		a.sequence_number AS "sequenceNumber",
+		a.create_time AS "createTime"
+	</sql>
+	
+	<sql id="messageGpsJoins">
+	</sql>
+    
+	<select id="get" resultType="MessageGps">
+		SELECT 
+			<include refid="messageGpsColumns"/>
+		FROM message_gps a
+		<include refid="messageGpsJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="MessageGps">
+		SELECT 
+			<include refid="messageGpsColumns"/>
+		FROM message_gps a
+		<include refid="messageGpsJoins"/>
+		<where>
+			
+			<if test="id != null and id != ''">
+				AND a.id = #{id}
+			</if>
+			<if test="carId != null and carId != ''">
+				AND a.car_id = #{carId}
+			</if>
+			<if test="startTime != null and startTime != ''">
+			<![CDATA[ 
+			AND a.car_time >= #{startTime} 
+			 ]]>     
+			</if>
+				<if test="endTime != null and endTime != ''">
+			<![CDATA[ 
+				AND a.car_time <= #{endTime}
+			]]>     
+			</if>
+			<if test="latitude != null and latitude != ''">
+				AND a.latitude = #{latitude}
+			</if>
+			<if test="longitude != null and longitude != ''">
+				AND a.longitude = #{longitude}
+			</if>
+			<if test="speed != null and speed != ''">
+				AND a.speed = #{speed}
+			</if>
+			<if test="direction != null and direction != ''">
+				AND a.direction = #{direction}
+			</if>
+			<if test="baseStation != null and baseStation != ''">
+				AND a.base_station = #{baseStation}
+			</if>
+			<if test="gpsLocateStatus != null and gpsLocateStatus != ''">
+				AND a.gps_locate_status = #{gpsLocateStatus}
+			</if>
+			<if test="deviceStatus != null and deviceStatus != ''">
+				AND a.device_status = #{deviceStatus}
+			</if>
+			<if test="batteryVoltage != null and batteryVoltage != ''">
+				AND a.battery_voltage = #{batteryVoltage}
+			</if>
+			<if test="signalIntensity != null and signalIntensity != ''">
+				AND a.signal_intensity = #{signalIntensity}
+			</if>
+			<if test="analogInputOne != null and analogInputOne != ''">
+				AND a.analog_input_one = #{analogInputOne}
+			</if>
+			<if test="analogInputTwo != null and analogInputTwo != ''">
+				AND a.analog_input_two = #{analogInputTwo}
+			</if>
+			<if test="sequenceNumber != null and sequenceNumber != ''">
+				AND a.sequence_number = #{sequenceNumber}
+			</if>
+			<if test="createTime != null and createTime != ''">
+				AND a.create_time = #{createTime}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			ORDER BY id
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="MessageGps">
+		SELECT 
+			<include refid="messageGpsColumns"/>
+		FROM message_gps a
+		<include refid="messageGpsJoins"/>
+		<where>
+			
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO message_gps(
+			id,
+			car_id,
+			car_time,
+			latitude,
+			longitude,
+			speed,
+			direction,
+			base_station,
+			gps_locate_status,
+			device_status,
+			battery_voltage,
+			signal_intensity,
+			analog_input_one,
+			analog_input_two,
+			sequence_number,
+			create_time
+		) VALUES (
+			#{id},
+			#{carId},
+			#{carTime},
+			#{latitude},
+			#{longitude},
+			#{speed},
+			#{direction},
+			#{baseStation},
+			#{gpsLocateStatus},
+			#{deviceStatus},
+			#{batteryVoltage},
+			#{signalIntensity},
+			#{analogInputOne},
+			#{analogInputTwo},
+			#{sequenceNumber},
+			#{createTime}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE message_gps SET 	
+			car_id = #{carId},
+			car_time = #{carTime},
+			latitude = #{latitude},
+			longitude = #{longitude},
+			speed = #{speed},
+			direction = #{direction},
+			base_station = #{baseStation},
+			gps_locate_status = #{gpsLocateStatus},
+			device_status = #{deviceStatus},
+			battery_voltage = #{batteryVoltage},
+			signal_intensity = #{signalIntensity},
+			analog_input_one = #{analogInputOne},
+			analog_input_two = #{analogInputTwo},
+			sequence_number = #{sequenceNumber},
+			create_time = #{createTime}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		DELETE FROM message_gps
+		WHERE id = #{id}
+	</update>
+	
+</mapper>

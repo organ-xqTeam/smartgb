@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.drive.dao.OcrDriverDao">
+    
+	<sql id="ocrDriverColumns">
+		a.id AS "id",
+		a.login_name AS "loginName",
+		a.real_name AS "realName",
+		a.password AS "password",
+		a.sex AS "sex",
+		a.phone AS "phone",
+		a.duty AS "duty",
+		a.card_number AS "cardNumber",
+		a.job_number AS "jobNumber",
+		a.driving_licence_number AS "drivingLicenceNumber",
+		a.status AS "status",
+		a.area_id AS "area.id",
+        b.name AS "area.name",
+		a.reset_code AS "resetCode",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="ocrDriverJoins">
+	   LEFT JOIN sys_area b ON b.id=a.area_id   
+	</sql>
+    
+	<select id="get" resultType="OcrDriver">
+		SELECT 
+			<include refid="ocrDriverColumns"/>
+		FROM ocr_driver a
+		<include refid="ocrDriverJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="OcrDriver">
+		SELECT 
+			<include refid="ocrDriverColumns"/>
+		FROM ocr_driver a
+		<include refid="ocrDriverJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="realName != null and realName != ''">
+				AND a.real_name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{realName}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{realName}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{realName},'%')</if>
+			</if>
+			<if test="phone != null and phone != ''">
+				AND a.phone LIKE 
+					<if test="dbName == 'oracle'">'%'||#{phone}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{phone}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{phone},'%')</if>
+			</if>
+			<if test="cardNumber != null and cardNumber != ''">
+				AND a.card_number LIKE 
+					<if test="dbName == 'oracle'">'%'||#{cardNumber}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{cardNumber}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{cardNumber},'%')</if>
+			</if>
+			<if test="jobNumber != null and jobNumber != ''">
+				AND a.job_number LIKE 
+					<if test="dbName == 'oracle'">'%'||#{jobNumber}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{jobNumber}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{jobNumber},'%')</if>
+			</if>
+			<if test="loginName != null and loginName != ''">
+				AND a.login_name = #{loginName}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="OcrDriver">
+		SELECT 
+			<include refid="ocrDriverColumns"/>
+		FROM ocr_driver a
+		<include refid="ocrDriverJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO ocr_driver(
+			id,
+			login_name,
+			real_name,
+			password,
+			sex,
+			phone,
+			duty,
+			card_number,
+			job_number,
+			driving_licence_number,
+			status,
+			area_id,
+			reset_code,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{loginName},
+			#{realName},
+			#{password},
+			#{sex},
+			#{phone},
+			#{duty},
+			#{cardNumber},
+			#{jobNumber},
+			#{drivingLicenceNumber},
+			#{status},
+			#{area.id},
+			#{resetCode},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE ocr_driver SET 	
+			login_name = #{loginName},
+			real_name = #{realName},
+			password = #{password},
+			sex = #{sex},
+			phone = #{phone},
+			duty = #{duty},
+			card_number = #{cardNumber},
+			job_number = #{jobNumber},
+			driving_licence_number = #{drivingLicenceNumber},
+            area_id = #{area.id},
+			status = #{status},
+			reset_code = #{resetCode},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE ocr_driver SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<resultMap id="OcrDriverMap" type="OcrDriver">
+		<id property="id" column="id" />
+		<result property="realName" column="realName" />
+		<result property="jobNumber" column="jobNumber" />
+		<result property="loginName" column="loginName" />
+		<collection property="ocrTaskList" ofType="OcrTask">
+			<id property="id" column="ocrTaskList.id" />
+			<result property="vehicleId" column="ocrTaskList.vehicleId" />
+            <result property="departureDate" column="ocrTaskList.departureDate" />
+            <result property="departurePlace" column="ocrTaskList.departurePlace" />
+            <result property="destination" column="ocrTaskList.destination" />
+            <result property="planArrivalDate" column="ocrTaskList.planArrivalDate" />
+            <result property="vehicleType" column="ocrTaskList.vehicleType" />
+            <result property="brandModels" column="ocrTaskList.brandModels" />
+            <result property="licensePlateNumber" column="ocrTaskList.licensePlateNumber" />
+            <result property="seatCount" column="ocrTaskList.seatCount" />
+            <result property="status" column="ocrTaskList.status" />
+        </collection>
+	</resultMap>
+	
+	<select id="findVOList" resultMap="OcrDriverMap">
+		SELECT 
+			a.id AS "id",
+			a.login_name AS "loginName",
+			a.real_name AS "realName",
+			a.password AS "password",
+			a.sex AS "sex",
+			a.phone AS "phone",
+			a.duty AS "duty",
+			a.card_number AS "cardNumber",
+			a.job_number AS "jobNumber",
+			a.status AS "status",
+			a.reset_code AS "resetCode",
+			a.create_by AS "createBy.id",
+			a.create_date AS "createDate",
+			a.update_by AS "updateBy.id",
+			a.update_date AS "updateDate",
+			a.remarks AS "remarks",
+			a.del_flag AS "delFlag",
+			t2.id AS "ocrTaskVOList.id",
+			t2.status AS "ocrTaskVOList.status",
+			t3.departure_date AS "ocrTaskVOList.departureDate",
+			t3.departure_place AS "ocrTaskVOList.departurePlace",
+			t3.destination AS "ocrTaskVOList.destination",
+			t3.plan_arrival_date AS "ocrTaskVOList.planArrivalDate",
+			t3.vehicle_type AS "ocrTaskVOList.vehicleType",
+			t4.brand_models AS "ocrTaskVOList.brandModels",
+			t4.license_plate_number AS "ocrTaskVOList.licensePlateNumber",
+			t4.seat_count AS "ocrTaskVOList.seatCount"
+		FROM ocr_driver a
+		LEFT JOIN ocr_task t2 ON a.id = t2.driver_id
+		LEFT JOIN ocr_order t3 ON t2.order_id = t3.id
+		LEFT JOIN ocr_vehicle t4 ON t2.vehicle_id = t4.id
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="getVO" resultMap="OcrDriverMap">
+		SELECT 
+			a.id AS "id",
+			a.login_name AS "loginName",
+			a.real_name AS "realName",
+			a.password AS "password",
+			a.sex AS "sex",
+			a.phone AS "phone",
+			a.duty AS "duty",
+			a.card_number AS "cardNumber",
+			a.job_number AS "jobNumber",
+			a.status AS "status",
+			a.reset_code AS "resetCode",
+			a.create_by AS "createBy.id",
+			a.create_date AS "createDate",
+			a.update_by AS "updateBy.id",
+			a.update_date AS "updateDate",
+			a.remarks AS "remarks",
+			a.del_flag AS "delFlag",
+			t2.id AS "ocrTaskList.id",
+			t2.vehicle_id AS "ocrTaskList.vehicleId",
+			t3.departure_date AS "ocrTaskList.departureDate",
+			t3.departure_place AS "ocrTaskList.departurePlace",
+			t3.destination AS "ocrTaskList.destination",
+			t3.plan_arrival_date AS "ocrTaskList.planArrivalDate",
+			t3.vehicle_type AS "ocrTaskList.vehicleType",
+			t4.brand_models AS "ocrTaskList.brandModels",
+			t4.license_plate_number AS "ocrTaskList.licensePlateNumber",
+			t4.seat_count AS "ocrTaskList.seatCount"
+		FROM ocr_driver a
+		LEFT JOIN ocr_task t2 ON a.id = t2.driver_id
+		LEFT JOIN ocr_order t3 ON t2.order_id = t3.id
+		LEFT JOIN ocr_vehicle t4 ON t2.vehicle_id = t4.id
+		WHERE a.id = #{id}
+	</select>
+	
+	<resultMap id="OcrDriverMap2" type="OcrDriver">
+		<id property="id" column="id" />
+		<result property="realName" column="realName" />
+        <result property="jobNumber" column="jobNumber" />
+	</resultMap>
+	
+	<select id="findVOList2" resultMap="OcrDriverMap2">
+		SELECT 
+			a.id AS "id",
+			a.login_name AS "loginName",
+			a.real_name AS "realName",
+			a.password AS "password",
+			a.sex AS "sex",
+			a.phone AS "phone",
+			a.duty AS "duty",
+			a.card_number AS "cardNumber",
+			a.job_number AS "jobNumber",
+			a.status AS "status",
+			a.area_id AS "area.id",
+			a.reset_code AS "resetCode",
+			a.create_by AS "createBy.id",
+			a.create_date AS "createDate",
+			a.update_by AS "updateBy.id",
+			a.update_date AS "updateDate",
+			a.remarks AS "remarks",
+			a.del_flag AS "delFlag"
+		FROM ocr_driver a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			AND
+			a.id NOT IN (
+				SELECT
+					t2.driver_id
+				FROM
+					ocr_task t2
+				LEFT JOIN ocr_order t3 ON t2.order_id = t3.id
+				WHERE
+					t2.`status` NOT IN (3,5,6,7)
+				AND (t3.departure_date BETWEEN #{departureDate}
+				AND #{planArrivalDate}
+				OR t3.plan_arrival_date BETWEEN #{departureDate}
+				AND #{planArrivalDate})
+			)
+			<if  test="area !=null and area.id != null and area.id !='' ">
+					AND a.area_id =#{area.id}		
+		    </if>
+		</where>	
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+</mapper>

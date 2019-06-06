@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.drive.dao.OcrDriverWorkDao">
+	
+	<sql id="gbCleanColumns">
+		a.id AS "id",
+		a.name AS "name",
+		a.sex AS "sex",
+		a.phone AS "phone",
+		a.id_num AS "idNum",
+		a.drive_num AS "driveNum",
+		a.position AS "position",
+		a.on_work AS "onWork",
+		a.off_work AS "offWork"
+	</sql>
+	
+	<select id="get" resultType="com.thinkgem.jeesite.modules.drive.entity.OcrDriverWork">
+		SELECT 
+			<include refid="gbCleanColumns"/>
+		FROM ocr_driver_work a WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="com.thinkgem.jeesite.modules.drive.entity.OcrDriverWork">
+		SELECT 
+			<include refid="gbCleanColumns"/>
+		FROM ocr_driver_work a
+		<where>
+			del_flag = #{DEL_FLAG_NORMAL}
+			<if test="name != null and name != ''">
+				AND a.name LIKE concat('%',#{name},'%')
+			</if>
+			<if test="phone != null and phone != ''">
+				AND a.phone LIKE concat('%',#{phone},'%')
+			</if>
+			<if test="idNum != null and idNum != ''">
+				AND a.idNum LIKE concat('%',#{idNum},'%')
+			</if>
+			<if test="driveNum != null and driveNum != ''">
+				AND a.driveNum LIKE concat('%',#{driveNum},'%')
+			</if>
+			<if test="workDateStar != null">
+				AND a.on_work &gt;= #{workDateStar}
+			</if>
+			<if test="workDateEnd != null">
+				AND a.off_work &lt;= #{workDateEnd}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.on_work DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<update id="delete">
+		UPDATE ocr_driver_work SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+</mapper>

@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.obd.dao.MessageObdDao">
+    <resultMap id="MessageObd" type="com.thinkgem.jeesite.modules.obd.entity.MessageObd">
+		<id column="id" jdbcType="BIGINT" property="obdId" />
+		<result column="car_id" jdbcType="BIGINT" property="carId" />
+		<result column="car_time" jdbcType="DATE" property="carTime" />
+		<result column="sequence_number" jdbcType="SMALLINT" property="sequenceNumber" />
+		<result column="type" jdbcType="VARCHAR" property="type" />
+		<result column="value" jdbcType="DOUBLE" property="value" />
+	</resultMap>
+
+	<select id="monthMileageList" resultType="com.thinkgem.jeesite.modules.obd.entity.OilMileageQueryVO">
+	SELECT
+	YEAR (omax.create_time) years,
+	MONTH (omax.create_time) months,
+		(	moiMax.`value`-moiMin.`value` )as mileage FROM message_obd_item moiMax,message_obd_item moiMin,
+(SELECT A.* ,DATE_FORMAT(A.create_time,'%Y-%m') as maxMonths  FROM message_obd A,
+		(SELECT car_id, MAX(create_time) max_day FROM message_obd  GROUP BY car_id,DATE_FORMAT(create_time,'%Y-%m')) B
+		WHERE A.car_id = B.car_id AND A.create_time = B.max_day GROUP BY
+		A.car_id,DATE_FORMAT(A.create_time,'%Y-%m')) omax
+,ocr_vehicle ov,
+(SELECT A.* ,DATE_FORMAT(A.create_time,'%Y-%m') as minMonths FROM message_obd A,
+	(SELECT car_id, MIN(create_time) max_day FROM message_obd  GROUP BY car_id,DATE_FORMAT(create_time,'%Y-%m')) B
+		WHERE A.car_id = B.car_id AND A.create_time = B.max_day GROUP BY
+		A.car_id,DATE_FORMAT(A.create_time,'%Y-%m')) omin
+	WHERE moiMax.obd_id = omax.id
+	AND omax.car_id = ov.equipment_imei
+	AND moiMax.type = '8a'
+	AND ov.id =  #{id}
+	AND YEAR(omax.create_time) =  #{year}
+	AND moiMin.obd_id = omin.id
+	AND omin.car_id = ov.equipment_imei
+	AND moiMin.type = '8a'
+	AND omax.maxMonths  = omin.minMonths
+	GROUP BY
+	months
+	ORDER BY months;
+	</select>
+
+	<select id="findObdItemById" resultType="com.thinkgem.jeesite.modules.obd.entity.MessageObd">
+		select moi.id,moi.obd_id,moi.type,moi.`value` from message_obd_item moi
+		where moi.obd_id =
+		(select obd.id from message_obd obd ,ocr_vehicle ocr
+		where obd.car_id= ocr.equipment_imei and ocr.id = #{id}
+		ORDER BY obd.create_time desc LIMIT 1)
+	</select>
+
+	<select id="findObdOilList" resultType="com.thinkgem.jeesite.modules.obd.entity.MessageObd">
+		SELECT moi.id,moi.value FROM message_obd mobd,message_obd_item moi
+		WHERE mobd.id = moi.obd_id
+		AND mobd.car_id = #{carId}
+		AND moi.type = '8b'
+		<if test="startTime != null">
+				<![CDATA[ 
+		AND mobd.car_time >=#{startTime} 
+				 ]]>
+		</if>
+		<if test="endTime != null ">
+				<![CDATA[ 
+		AND mobd.car_time <=#{endTime}
+				 ]]>
+		</if>
+		ORDER BY mobd.car_time
+	</select>
+	
+	<sql id="messageObdColumns">
+		a.id AS "obdId",
+		a.car_id AS "carId",
+		a.car_time AS "carTime",
+		a.sequence_number AS "sequenceNumber",
+		b.type AS "type",
+		b.value AS "value"
+	</sql>
+	
+	<sql id="messageObdJoins">
+	</sql>
+    
+	
+	<select id="getObdByCondition" parameterType="String" resultMap="MessageObd">
+		SELECT 
+			<include refid="messageObdColumns"/>
+		FROM message_obd a LEFT JOIN message_obd_item b on a.id = b.obd_id
+		<include refid="messageObdJoins"/>
+		<where>
+			<if test="obdId != null and obdId != ''">
+				AND a.id = #{obdId}
+			</if>
+			<if test="carId != null and carId != ''">
+				AND a.car_id = #{carId}
+			</if>
+			<if test="startTime != null and startTime != ''">
+				<![CDATA[ 
+				AND a.car_time >= #{startTime} 
+				 ]]>     
+			</if>
+			<if test="endTime != null and endTime != ''">
+				<![CDATA[ 
+					AND a.car_time <= #{endTime}
+				]]>
+			</if> 
+			<if test="sequenceNumber != null and sequenceNumber != ''">
+				AND a.sequence_number = #{sequenceNumber}
+			</if>
+			<if test="createTime != null and createTime != ''">
+				AND a.create_time = #{createTime}
+			</if>
+			<if test="type != null and type != ''">
+				AND b.type = #{type}
+			</if>
+			<if test="value != null and value != ''">
+				AND b.value = #{value}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.id
+			</otherwise>
+		</choose>
+	</select>
+</mapper>

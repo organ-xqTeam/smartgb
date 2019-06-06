@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.obd.dao.OcrOilConsumptionDao">
+    
+	<sql id="ocrOilConsumptionColumns">
+		a.id AS "id",
+		a.car_id AS "carId",
+		a.oil_consumption_day AS "oilConsumptionDay",
+		a.create_date AS "createDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.record_date AS "recordDate"
+	</sql>
+	
+	<sql id="ocrOilConsumptionJoins">
+	</sql>
+
+	<select id="dayOilAndMileageConsumptionList" resultType="com.thinkgem.jeesite.modules.obd.entity.OcrOilConsumption">
+		SELECT
+		ooc.id,
+		ooc.car_id AS carId,
+		ooc.oil_consumption_day AS oilConsumptionDay,
+		DATE_FORMAT(ooc.record_date,'%Y-%m-%d') as dateForQuery ,
+		(moiMax.`value`-moiMin.`value` ) as mileage
+		FROM
+		ocr_oil_consumption ooc,ocr_vehicle ov,message_obd_item moiMin,message_obd_item moiMax,
+(SELECT A.* FROM message_obd A,
+		(SELECT car_id, MAX(create_time) max_day FROM message_obd  GROUP BY car_id,DATE_FORMAT(create_time,'%Y-%m-%d')) B
+		WHERE A.car_id = B.car_id AND A.create_time = B.max_day GROUP BY
+		A.car_id,DATE_FORMAT(A.create_time,'%Y-%m-%d')) omax
+,
+(SELECT A.* FROM message_obd A,
+		(SELECT car_id, MIN(create_time) max_day FROM message_obd  GROUP BY car_id,DATE_FORMAT(create_time,'%Y-%m-%d')) B
+		WHERE A.car_id = B.car_id AND A.create_time = B.max_day GROUP BY
+		A.car_id,DATE_FORMAT(A.create_time,'%Y-%m-%d')) omin
+		WHERE
+		ooc.car_id = ov.equipment_imei
+		AND moiMin.obd_id = omin.id
+		AND omin.car_id = ov.equipment_imei
+		AND moiMin.type = '8a'
+		AND DATE_FORMAT(ooc.record_date,'%Y-%m-%d') =
+		DATE_FORMAT(omin.create_time,'%Y-%m-%d')
+		AND moiMax.obd_id = omax.id
+		AND omax.car_id = ov.equipment_imei
+		AND moiMax.type = '8a'
+		AND DATE_FORMAT(ooc.record_date,'%Y-%m-%d') =
+		DATE_FORMAT(omax.create_time,'%Y-%m-%d')
+		AND ov.id =  #{id}
+		AND YEAR(ooc.record_date) =   #{year}
+		AND MONTH(ooc.record_date) =   #{month}
+		GROUP BY DATE_FORMAT(ooc.record_date,'%Y-%m-%d')
+
+	</select>
+	<select id="monthOilConsumptionList" resultType="com.thinkgem.jeesite.modules.obd.entity.OilMileageQueryVO">
+	SELECT
+	YEAR (ooc.record_date) years,
+	MONTH (ooc.record_date)
+	months,
+	sum(ooc.oil_consumption_day) AS oilConsumption
+	FROM
+	ocr_oil_consumption ooc,ocr_vehicle ov
+	WHERE
+	ooc.car_id = ov.equipment_imei
+	AND ov.id = #{id}
+	AND YEAR(ooc.record_date) =  #{year}
+	GROUP BY
+	months
+	ORDER BY months;
+	</select>
+	
+    
+	<select id="get" resultType="OcrOilConsumption">
+		SELECT 
+			<include refid="ocrOilConsumptionColumns"/>
+		FROM ocr_oil_consumption a
+		<include refid="ocrOilConsumptionJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="OcrOilConsumption">
+		SELECT 
+			<include refid="ocrOilConsumptionColumns"/>
+		FROM ocr_oil_consumption a
+		<include refid="ocrOilConsumptionJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="id != null and id != ''">
+				AND a.id = #{id}
+			</if>
+			<if test="carId != null and carId != ''">
+				AND a.car_id = #{carId}
+			</if>
+			<if test="oilConsumptionDay != null and oilConsumptionDay != ''">
+				AND a.oil_consumption_day = #{oilConsumptionDay}
+			</if>
+			<if test="createDate != null and createDate != ''">
+				AND a.create_date = #{createDate}
+			</if>
+			<if test="remarks != null and remarks != ''">
+				AND a.remarks = #{remarks}
+			</if>
+			<if test="delFlag != null and delFlag != ''">
+				AND a.del_flag = #{delFlag}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="OcrOilConsumption">
+		SELECT 
+			<include refid="ocrOilConsumptionColumns"/>
+		FROM ocr_oil_consumption a
+		<include refid="ocrOilConsumptionJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO ocr_oil_consumption(
+			id,
+			car_id,
+			oil_consumption_day,
+			create_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{carId},
+			#{oilConsumptionDay},
+			#{createDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE ocr_oil_consumption SET 	
+			car_id = #{carId},
+			oil_consumption_day = #{oilConsumptionDay},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE ocr_oil_consumption SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	 <insert id="insertList" parameterType="java.util.List">
+    INSERT INTO ocr_oil_consumption(
+			car_id,
+			oil_consumption_day,
+			create_date,
+			remarks,
+			del_flag,
+			record_date)
+    values  
+    <foreach collection="list" item="item" separator="," >
+    	(
+			#{item.carId,jdbcType=BIGINT},
+			#{item.oilConsumptionDay,jdbcType=DOUBLE},
+			#{item.createDate,jdbcType=TIMESTAMP},
+			#{item.remarks,jdbcType=VARCHAR},
+			#{item.delFlag,jdbcType=CHAR},
+			#{item.recordDate,jdbcType=TIMESTAMP}
+			)
+    </foreach>
+  </insert>
+</mapper>

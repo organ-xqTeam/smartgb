@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.car.dao.OcrVehicleDao">
+
+
+	<select id="fingTankType" resultType="OcrVehicle">
+		SELECT ob.tank_type as tankType,ov.tank_volume as tankVolume FROM ocr_vehicle ov,ocr_brand ob
+		WHERE ov.vehicle_brand = ob.id
+		AND ov.id = #{id}
+	</select>
+	
+	<select id="findOcrVehicleGPSList" resultType="com.thinkgem.jeesite.modules.car.entity.OcrVehicleGPSVO">
+		SELECT ov.id AS "id",
+		ov.vehicle_brand AS "vehicleBrand",
+		ov.brand_models AS "brandModels",
+		ov.vehicle_type AS "vehicleType",
+		ov.license_plate_number AS "licensePlateNumber",
+		ov.driving_license_number AS "drivingLicenseNumber",
+		ov.engine_number AS "engineNumber",
+		ov.vehicle_identification_number AS "vehicleIdentificationNumber",
+		ov.seat_count AS "seatCount",
+		ov.tank_volume AS "tankVolume",
+		ov.equipment_imei AS "equipmentImei",
+		ov.equipment_status AS "equipmentStatus",
+		mg.car_id AS "carId",
+		mg.car_time AS "carTime",
+		mg.latitude AS "latitude",
+		mg.longitude AS "longitude",
+		mg.speed AS "speed",
+		mg.direction AS "direction",
+		mg.create_time AS "createTime"
+		FROM ocr_vehicle ov,
+		(SELECT A.* FROM message_gps A,
+		(SELECT car_id, MAX(create_time) max_day FROM message_gps WHERE create_time
+		&gt;=date_sub('2017-12-14 08:28:13', interval 12 hour) GROUP BY car_id) B
+		WHERE A.car_id = B.car_id AND A.create_time = B.max_day GROUP BY
+		A.car_id) mg
+		WHERE ov.equipment_imei = mg.car_id
+		AND ov.del_flag = '0'
+	</select>
+	
+	<select id="findOcrVehicleGPS" resultType="com.thinkgem.jeesite.modules.car.entity.OcrVehicleGPSVO">
+		SELECT ov.id AS "id",
+		ov.vehicle_brand AS "vehicleBrand",
+		ob.tank_type AS "tankType",
+		ov.brand_models AS "brandModels",
+		ov.vehicle_type AS "vehicleType",
+		ov.license_plate_number AS "licensePlateNumber",
+		ov.driving_license_number AS "drivingLicenseNumber",
+		ov.engine_number AS "engineNumber",
+		ov.vehicle_identification_number AS "vehicleIdentificationNumber",
+		ov.seat_count AS "seatCount",
+		ov.tank_volume AS "tankVolume",
+		ov.equipment_imei AS "equipmentImei",
+		ov.equipment_status AS "equipmentStatus",
+		mg.car_id AS "carId",
+		mg.car_time AS "carTime",
+		mg.latitude AS "latitude",
+		mg.longitude AS "longitude",
+		mg.speed AS "speed",
+		mg.direction AS "direction",
+		mg.create_time AS "createTime"
+		FROM ocr_vehicle ov,
+		(SELECT A.* FROM message_gps A,
+		(SELECT car_id, MAX(create_time) max_day FROM message_gps GROUP BY car_id) B
+		WHERE A.car_id = B.car_id AND A.create_time = B.max_day GROUP BY
+		A.car_id) mg,
+		ocr_brand ob
+		WHERE ov.equipment_imei = mg.car_id
+		AND ob.id = ov.vehicle_brand
+		AND ov.del_flag = '0'
+		AND ov.id = #{id}
+	</select>
+	
+	<sql id="ocrVehicleColumns">
+		a.id AS "id",
+		a.vehicle_brand AS "vehicleBrand",
+		a.brand_models AS "brandModels",
+		a.vehicle_type AS "vehicleType",
+		a.license_plate_number AS "licensePlateNumber",
+		a.driving_license_number AS "drivingLicenseNumber",
+		a.engine_number AS "engineNumber",
+		a.vehicle_identification_number AS "vehicleIdentificationNumber",
+		a.seat_count AS "seatCount",
+		a.tank_volume AS "tankVolume",
+		a.equipment_imei AS "equipmentImei",
+		a.equipment_status AS "equipmentStatus",
+		a.status AS "status",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.area_id AS "area.id",
+		a.insurance_date AS "insuranceDate",
+		a.annual_inspection_date AS "annualInspectionDate",
+		b.name AS "area.name"
+	</sql>
+	
+	<sql id="ocrVehicleJoins">
+	LEFT JOIN sys_area b ON b.id=a.area_id   
+	</sql>
+    
+	<select id="get" resultType="OcrVehicle">
+		SELECT 
+			<include refid="ocrVehicleColumns"/>
+		FROM ocr_vehicle a
+		<include refid="ocrVehicleJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="OcrVehicle">
+		SELECT 
+			<include refid="ocrVehicleColumns"/>
+		FROM ocr_vehicle a
+		<include refid="ocrVehicleJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="brandModels != null and brandModels != ''">
+				AND a.brand_models LIKE 
+					<if test="dbName == 'oracle'">'%'||#{brandModels}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{brandModels}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{brandModels},'%')</if>
+			</if>
+			<if test="vehicleType != null and vehicleType != ''">
+				AND a.vehicle_type LIKE 
+					<if test="dbName == 'oracle'">'%'||#{vehicleType}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{vehicleType}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{vehicleType},'%')</if>
+			</if>
+			<if test="licensePlateNumber != null and licensePlateNumber != ''">
+				AND a.license_plate_number LIKE 
+					<if test="dbName == 'oracle'">'%'||#{licensePlateNumber}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{licensePlateNumber}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{licensePlateNumber},'%')</if>
+			</if>
+			<if test="equipmentImei != null and equipmentImei != ''">
+				AND a.equipment_imei = #{equipmentImei}
+			</if>
+			<if test="status != null and status != ''">
+				AND a.status = #{status}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="OcrVehicle">
+		SELECT 
+			<include refid="ocrVehicleColumns"/>
+		FROM ocr_vehicle a
+		<include refid="ocrVehicleJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO ocr_vehicle(
+			id,
+			vehicle_brand,
+			brand_models,
+			vehicle_type,
+			license_plate_number,
+			driving_license_number,
+			engine_number,
+			vehicle_identification_number,
+			insurance_date,
+			annual_inspection_date,
+			seat_count,
+			tank_volume,
+			equipment_imei,
+			equipment_status,
+			status,
+			area_id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{vehicleBrand},
+			#{brandModels},
+			#{vehicleType},
+			#{licensePlateNumber},
+			#{drivingLicenseNumber},
+			#{engineNumber},
+			#{vehicleIdentificationNumber},
+			#{insuranceDate},
+			#{annualInspectionDate},
+			#{seatCount},
+			#{tankVolume},
+			#{equipmentImei},
+			#{equipmentStatus},
+			#{status},
+			#{area.id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE ocr_vehicle SET 	
+			vehicle_brand = #{vehicleBrand},
+			brand_models = #{brandModels},
+			vehicle_type = #{vehicleType},
+			license_plate_number = #{licensePlateNumber},
+			driving_license_number = #{drivingLicenseNumber},
+			engine_number = #{engineNumber},
+			vehicle_identification_number = #{vehicleIdentificationNumber},
+			insurance_date = #{insuranceDate},
+			annual_inspection_date = #{annualInspectionDate},
+			seat_count = #{seatCount},
+			tank_volume = #{tankVolume},
+			equipment_imei = #{equipmentImei},
+			equipment_status = #{equipmentStatus},
+			status = #{status},
+			area_id = #{area.id},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE ocr_vehicle SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+<resultMap id="OcrVehicleMap" type="OcrVehicle">
+		<id property="id" column="id" />
+		<result property="licensePlateNumber" column="licensePlateNumber" />
+		<result property="vehicleType" column="vehicleType" />
+		<result property="brandModels" column="brandModels" />
+		<result property="seatCount" column="seatCount" />
+		<collection property="ocrTaskVOList" ofType="OcrTaskVO">
+			<id property="id" column="ocrTaskVOList.id" />
+            <result property="departureDate" column="ocrTaskVOList.departureDate" />
+            <result property="departurePlace" column="ocrTaskVOList.departurePlace" />
+            <result property="destination" column="ocrTaskVOList.destination" />
+            <result property="planArrivalDate" column="ocrTaskVOList.planArrivalDate" />
+            <result property="status" column="ocrTaskVOList.status" />
+        </collection>
+	</resultMap>
+	
+	<select id="findVOList" resultMap="OcrVehicleMap">
+		SELECT
+			a.id AS "id",
+			a.license_plate_number AS "licensePlateNumber",
+			a.vehicle_type AS "vehicleType",
+			a.brand_models AS "brandModels",
+			a.seat_count AS "seatCount",
+			t2.id AS "ocrTaskVOList.id",
+			t2.status AS "ocrTaskVOList.status",
+			t3.departure_date AS "ocrTaskVOList.departureDate",
+			t3.departure_place AS "ocrTaskVOList.departurePlace",
+			t3.destination AS "ocrTaskVOList.destination",
+			t3.plan_arrival_date AS "ocrTaskVOList.planArrivalDate"
+		FROM
+			ocr_vehicle a
+		LEFT JOIN ocr_task t2 ON a.id = t2.vehicle_id
+		LEFT JOIN ocr_order t3 ON t2.order_id = t3.id
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			AND
+			a.id NOT IN (
+				SELECT
+					t2.vehicle_id
+				FROM
+					ocr_task t2
+				LEFT JOIN ocr_order t3 ON t2.order_id = t3.id
+				WHERE
+					t2.`status` NOT IN (3,5,6,7)
+				AND (t3.departure_date BETWEEN #{departureDate}
+				AND #{planArrivalDate}
+				OR t3.plan_arrival_date BETWEEN #{departureDate}
+				AND #{planArrivalDate})
+			)
+			<if test="vehicleType != null and vehicleType != ''">
+                AND a.vehicle_type = #{vehicleType}
+            </if>
+            <if  test="area !=null and area.id != null and area.id !='' ">
+					AND a.area_id =#{area.id}		
+		    </if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+		
+</mapper>

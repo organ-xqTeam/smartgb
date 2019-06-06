@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.cost.dao.OcrCostDao">
+
+<update id="clearAccounts">
+UPDATE ocr_cost c,ocr_order o SET c.clear_accounts_flag = '1'
+<where>
+year(o.departure_date)=#{year} 
+AND month(o.departure_date)=#{month} 
+AND c.del_flag = 0
+AND o.del_flag = 0
+AND o.id=c.order_id
+AND c.company_id = #{companyId}
+AND
+(
+(o.payment_mode = 0
+AND c.payment_status = 0
+AND o.status= '5'
+)
+OR o.payment_mode = 1
+)
+</where>
+</update>
+
+<update id="clearAccountsOrder">
+UPDATE ocr_order SET status = '6' 
+<where> 
+year(departure_date)=#{year}  
+AND month(departure_date)=#{month} 
+AND del_flag = 0 
+AND status= '5'
+AND company_id = #{companyId}
+
+</where>
+</update>
+<select id="findCostList" resultType="com.thinkgem.jeesite.modules.cost.entity.OcrCostDetailedVO">
+SELECT a.id,a.year,a.month,a.totalAmount,a.count as orderCount,a.unpaid,a.paidOnline,a.unpaidOnline,a.paidUnified FROM 
+(SELECT concat(month(ord.departure_date),year(ord.departure_date)) as id, month(ord.departure_date) AS month ,year(ord.departure_date) AS year ,
+COUNT(*) as count,
+IFNULL(SUM(cc.amount),0) AS totalAmount,
+IFNULL(cu.unpaid,0) AS unpaid,
+IFNULL(ccp.paidOnline,0) AS paidOnline,
+IFNULL(ccp1.unpaidOnline,0) AS unpaidOnline,
+IFNULL(ccp2.paidUnified,0) AS paidUnified
+FROM ocr_cost cc
+LEFT JOIN ocr_order ord ON ord.id=cc.order_id
+LEFT JOIN
+(SELECT c.id, month(o.departure_date)AS month ,year(o.departure_date)AS year ,sum(o.cost) AS unpaid  FROM ocr_cost c
+LEFT JOIN ocr_order o ON o.id = c.order_id AND ((o.payment_mode = 1  AND c.clear_accounts_flag = 0)
+ OR (o.payment_mode =0 AND c.payment_status = 0  AND c.clear_accounts_flag = 0))
+<where>
+ c.del_flag = #{DEL_FLAG_NORMAL}
+<if test="companyId != null and companyId != ''">
+AND c.company_id = #{companyId}
+</if>
+</where>
+GROUP BY year(o.departure_date),month(o.departure_date)
+)
+AS cu ON cu.year=year(ord.departure_date) and cu.month = month(ord.departure_date)
+
+LEFT JOIN
+(SELECT cp.id,  month(op.departure_date)AS month ,year(op.departure_date)AS year  ,sum(op.cost) AS paidOnline  FROM ocr_cost cp
+LEFT JOIN ocr_order op ON op.id = cp.order_id AND (op.payment_mode = 0  AND (cp.payment_status = 1
+ OR cp.clear_accounts_flag = 1))
+<where>
+ cp.del_flag = #{DEL_FLAG_NORMAL}
+<if test="companyId != null and companyId != ''">
+AND cp.company_id = #{companyId}
+</if>
+</where>
+GROUP BY year(op.departure_date),month(op.departure_date)
+)
+AS ccp ON  ccp.year=year(ord.departure_date) and ccp.month = month(ord.departure_date)
+
+
+LEFT JOIN
+(SELECT cp1.id,  month(op1.departure_date)AS month ,year(op1.departure_date)AS year  ,sum(op1.cost) AS unpaidOnline  FROM ocr_cost cp1
+LEFT JOIN ocr_order op1 ON op1.id = cp1.order_id AND (op1.payment_mode = 0  AND cp1.payment_status = 0
+AND cp1.clear_accounts_flag = 0)
+<where>
+ cp1.del_flag = #{DEL_FLAG_NORMAL}
+<if test="companyId != null and companyId != ''">
+AND cp1.company_id = #{companyId}
+</if>
+</where>
+GROUP BY year(op1.departure_date),month(op1.departure_date)
+)
+AS ccp1 ON  ccp1.year=year(ord.departure_date) and ccp1.month = month(ord.departure_date)
+
+
+
+LEFT JOIN
+(SELECT cp2.id,  month(op2.departure_date)AS month ,year(op2.departure_date)AS year  ,sum(op2.cost) AS paidUnified  FROM ocr_cost cp2
+LEFT JOIN ocr_order op2 ON op2.id = cp2.order_id AND op2.payment_mode = 1 
+<where>
+ cp2.del_flag = #{DEL_FLAG_NORMAL}
+<if test="companyId != null and companyId != ''">
+AND cp2.company_id = #{companyId}
+</if>
+</where>
+GROUP BY year(op2.departure_date),month(op2.departure_date)
+)
+AS ccp2 ON  ccp2.year=year(ord.departure_date) and ccp2.month = month(ord.departure_date)
+
+
+<where>
+	cc.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="companyId != null and companyId != ''">
+				AND cc.company_id = #{companyId}
+			</if>
+
+			<if test="beginDepartureDate != null and beginDepartureDate != ''">
+			<![CDATA[ 
+			AND year(ord.departure_date) >= #{beginDepartureDate} 
+			 ]]>     
+			</if>
+				<if test="endDepartureDate != null and endDepartureDate != ''">
+			<![CDATA[ 
+				AND year(ord.departure_date) <= #{endDepartureDate}
+			]]>     
+			</if>
+</where>
+GROUP BY year(ord.departure_date),month(ord.departure_date)) a
+<where>
+1=1
+			<if test="status != null and status != '' and status == '0'.toString()">
+				AND  a.unpaid > 0 
+			</if>
+			<if test="status != null and status != '' and status == '1'.toString()">
+				AND  a.unpaid = 0 
+			</if>
+</where>
+<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose></select>
+    
+<select id="companyCostList" resultType="com.thinkgem.jeesite.modules.cost.entity.CompanyCostVO">
+ SELECT 
+ oo.id, 
+ oo.name,
+ oo.parent_id as parentId,
+IFNULL(cc.totalAmount,0) AS totalAmount,
+IFNULL(ccp.paid,0) AS paid,
+IFNULL(ccu.unpaid,0) AS unpaid
+FROM sys_office oo
+LEFT JOIN 
+(SELECT c.company_id, SUM(c.amount) AS totalAmount FROM sys_office o 
+LEFT JOIN ocr_cost c ON c.company_id = o.id
+WHERE o.del_flag = 0
+GROUP BY o.name
+) AS cc ON cc.company_id = oo.id
+LEFT JOIN
+(SELECT cp.company_id, SUM(odp.cost) AS paid FROM sys_office op
+LEFT JOIN ocr_cost cp ON cp.company_id = op.id
+LEFT JOIN ocr_order odp ON odp.id = cp.order_id AND ((odp.payment_mode = 0  AND cp.payment_status = 1)
+ OR  cp.clear_accounts_flag = 1)
+WHERE op.del_flag = 0
+GROUP BY op.name
+) AS ccp ON ccp.company_id = oo.id
+LEFT JOIN 
+(SELECT cu.company_id, SUM(od.cost) AS unpaid FROM sys_office ou 
+LEFT JOIN ocr_cost cu ON cu.company_id = ou.id AND cu.clear_accounts_flag = 0
+LEFT JOIN ocr_order od ON od.id = cu.order_id AND ((od.payment_mode = 1  AND cu.clear_accounts_flag = 0)
+ OR (od.payment_mode =0 AND cu.payment_status = 0  AND cu.clear_accounts_flag = 0))
+WHERE ou.del_flag = 0
+GROUP BY ou.name
+) AS ccu ON  ccu.company_id = oo.id
+WHERE oo.del_flag = 0
+<if test="name != null and name != ''">
+	AND oo.name like 
+		<if test="dbName == 'oracle'">'%'||#{name}||'%'</if>
+		<if test="dbName == 'mssql'">'%'+#{name}+'%'</if>
+		<if test="dbName == 'mysql'">CONCAT('%', #{name}, '%')</if>
+</if>
+GROUP BY oo.name
+</select>
+
+	<sql id="ocrCostColumns">
+		a.id AS "id",
+		a.order_id AS "orderId",
+		a.payment_status AS "paymentStatus",
+		a.amount AS "amount",
+		a.company_id AS "office.id",
+		a.clear_accounts_flag AS "clearAccountsFlag",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="ocrCostJoins">
+	</sql>
+    
+	<select id="get" resultType="OcrCost">
+		SELECT 
+			<include refid="ocrCostColumns"/>
+		FROM ocr_cost a
+		<include refid="ocrCostJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="OcrCost">
+		SELECT 
+			<include refid="ocrCostColumns"/>
+		FROM ocr_cost a
+		<include refid="ocrCostJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="clearAccountsFlag != null and clearAccountsFlag != ''">
+				AND a.clear_accounts_flag = #{clearAccountsFlag}
+			</if>
+			<if test="createDate != null and createDate != ''">
+				AND a.create_date = #{createDate}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="OcrCost">
+		SELECT 
+			<include refid="ocrCostColumns"/>
+		FROM ocr_cost a
+		<include refid="ocrCostJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO ocr_cost(
+			id,
+			order_id,
+			payment_status,
+			amount,
+			company_id,
+			clear_accounts_flag,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{orderId},
+			#{paymentStatus},
+			#{amount},
+			#{office.id},
+			#{clearAccountsFlag},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE ocr_cost SET 	
+			order_id = #{orderId},
+			payment_status = #{paymentStatus},
+			amount = #{amount},
+			company_id = #{office.id},
+			clear_accounts_flag = #{clearAccountsFlag},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE ocr_cost SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+</mapper>

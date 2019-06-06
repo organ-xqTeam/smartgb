@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.journey.dao.OcrJourneyDao">
+    
+	<sql id="ocrJourneyColumns">
+		a.id AS "id",
+		a.company_id AS "companyId",
+		a.vehicle_type AS "vehicleType",
+		a.payment_mode AS "paymentMode",
+		a.cost AS "cost",
+		a.user_id AS "user.id",
+		a.people_number AS "peopleNumber",
+		a.appear_purpose AS "appearPurpose",
+		a.phone AS "phone",
+		a.status AS "status",
+		a.driver_id AS "driverId",
+		a.departure_place AS "departurePlace",
+		a.destination AS "destination",
+		a.departure_date AS "departureDate",
+		a.plan_arrival_date AS "planArrivalDate",
+		a.reason AS "reason",
+		a.area_id AS "areaId",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		b.name AS "companyName",
+		c.real_name AS "userRealName",
+		c.job_number AS "userJobNumber",
+		d.id AS "taskId",
+		d.status AS "taskStatus",
+		e.real_name AS "driverRealName",
+		e.job_number AS "driverJobNumber",
+		e.phone AS "driverPhone",
+		f.brand_models AS "brandModels",
+		f.license_plate_number AS "licensePlateNumber",
+		u6.name AS "user.name"
+	</sql>
+	
+	<sql id="ocrJourneyJoins">
+		LEFT JOIN sys_office b ON a.company_id = b.id
+		LEFT JOIN ocr_user c ON a.user_id = c.id
+		LEFT JOIN ocr_task d ON a.id = d.order_id
+		LEFT JOIN ocr_driver e ON d.driver_id = e.id
+		LEFT JOIN ocr_vehicle f ON d.vehicle_id = f.id
+		LEFT JOIN sys_user u6 ON u6.id = a.user_id
+	</sql>
+    
+	<select id="get" resultType="OcrJourney">
+		SELECT 
+			<include refid="ocrJourneyColumns"/>
+		FROM ocr_order a
+		<include refid="ocrJourneyJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="OcrJourney">
+		SELECT 
+			<include refid="ocrJourneyColumns"/>
+		FROM ocr_order a
+		<include refid="ocrJourneyJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="status != null and status != ''">
+				<choose>
+					<when test="status == '2'.toString()">
+						AND (a.status = #{status} OR a.status = '1')
+					</when>
+					<otherwise>
+						AND a.status = #{status}
+					</otherwise>
+				</choose>
+			</if>
+			<if test="areaId != null and  areaId  != ''">
+					AND a.area_id =#{ areaId}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="OcrJourney">
+		SELECT 
+			<include refid="ocrJourneyColumns"/>
+		FROM ocr_order a
+		<include refid="ocrJourneyJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO ocr_order(
+			id,
+			company_id,
+			vehicle_type,
+			payment_mode,
+			cost,
+			user_id,
+			people_number,
+			appear_purpose,
+			phone,
+			status,
+			driver_id,
+			departure_place,
+			destination,
+			departure_date,
+			plan_arrival_date,
+			reason,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{companyId},
+			#{vehicleType},
+			#{paymentMode},
+			#{cost},
+			#{user.id},
+			#{peopleNumber},
+			#{appearPurpose},
+			#{phone},
+			#{status},
+			#{driverId},
+			#{departurePlace},
+			#{destination},
+			#{departureDate},
+			#{planArrivalDate},
+			#{reason},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE ocr_order SET 	
+			company_id = #{companyId},
+			vehicle_type = #{vehicleType},
+			payment_mode = #{paymentMode},
+			cost = #{cost},
+			user_id = #{user.id},
+			people_number = #{peopleNumber},
+			appear_purpose = #{appearPurpose},
+			phone = #{phone},
+			status = #{status},
+			driver_id = #{driverId},
+			departure_place = #{departurePlace},
+			destination = #{destination},
+			departure_date = #{departureDate},
+			plan_arrival_date = #{planArrivalDate},
+			reason = #{reason},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE ocr_order SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+</mapper>
