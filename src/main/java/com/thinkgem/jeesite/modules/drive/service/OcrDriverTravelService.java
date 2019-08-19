@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +29,9 @@ import com.thinkgem.jeesite.modules.obd.entity.MessageGps;
 @Transactional(readOnly = true)
 public class OcrDriverTravelService extends CrudService<OcrDriverTravelDao, OcrDriverTravel> {
 	
+	@Autowired
+	private OcrDriverTravelDao dao;
+	
 	public OcrDriverTravel get(String id) {
 		return super.get(id);
 	}
@@ -40,6 +44,16 @@ public class OcrDriverTravelService extends CrudService<OcrDriverTravelDao, OcrD
 	@Transactional(readOnly = false)
 	public void delete(OcrDriverTravel travel) {
 		super.delete(travel);
+	}
+	
+	@Transactional(readOnly = false)
+	public List<OcrDriverTravel> getTravelList() {
+		List<OcrDriverTravel> carList = dao.findListGroup();
+		List<OcrDriverTravel> result = new ArrayList<OcrDriverTravel>();
+		for(OcrDriverTravel c : carList) {
+			result.add(dao.findListByCarid(c.getCarId()));
+		}
+		return result;
 	}
 
 	public List<LatLng> getListByCarIdAndDate(String equipmentImei, Date goDate, Date tomorrowDate) {

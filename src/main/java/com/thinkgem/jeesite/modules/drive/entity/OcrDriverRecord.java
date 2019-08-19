@@ -4,6 +4,7 @@ import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.thinkgem.jeesite.common.persistence.DataEntity;
+import com.thinkgem.jeesite.common.utils.excel.annotation.ExcelField;
 
 /**
  * 
@@ -18,14 +19,24 @@ public class OcrDriverRecord extends DataEntity<OcrDriverRecord>{
 	
 	private String carId;
 	
+	
+	@ExcelField(title="车牌号",align=2, sort=20)
 	private String plateNum;
 	
+	
+	@ExcelField(title="出发时间",align=2, sort=20)
 	private Date goDate;
 	
+	
+	@ExcelField(title="结束时间",align=2, sort=20)
 	private Date arriveDate;
 	
+	
+	@ExcelField(title="车辆",align=2, sort=20)
 	private String carBand;
 	
+	
+	@ExcelField(title="油耗",align=2, sort=20)
 	private String oilNum;
 	
 	private Date createDate;
@@ -81,7 +92,7 @@ public class OcrDriverRecord extends DataEntity<OcrDriverRecord>{
 	public void setCreateDate(Date createDate) {
 		this.createDate = createDate;
 	}
-	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+	
 	public Date getGoDate() {
 		return goDate;
 	}
@@ -89,7 +100,7 @@ public class OcrDriverRecord extends DataEntity<OcrDriverRecord>{
 	public void setGoDate(Date goDate) {
 		this.goDate = goDate;
 	}
-	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+
 	public Date getArriveDate() {
 		return arriveDate;
 	}

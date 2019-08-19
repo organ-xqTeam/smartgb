@@ -81,9 +81,11 @@
 				<c:if test="${ocrMessage.status==0}">
     				<a href="${ctx}/message/ocrMessage/form?id=${ocrMessage.id}">编辑</a>
 					<a href="${ctx}/message/ocrMessage/send?id=${ocrMessage.id}" onclick="return confirmx('确认要推送该信息吗？', this.href)">发送</a>
+					<a href="${ctx}/message/ocrMessage/delete?id=${ocrMessage.id}" onclick="return confirmx('确认要删除该信息吗？', this.href)">删除</a>
 				</c:if>
 				<c:if test="${ocrMessage.status==1}">
     				<a href="${ctx}/message/ocrMessage/check?id=${ocrMessage.id}">查看</a>
+					<a href="${ctx}/message/ocrMessage/delete?id=${ocrMessage.id}" onclick="return confirmx('确认要删除该信息吗？', this.href)">删除</a>
 				</c:if>
 				</td></shiro:hasPermission>
 			</tr>

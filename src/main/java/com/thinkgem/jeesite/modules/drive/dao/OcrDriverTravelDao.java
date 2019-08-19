@@ -3,6 +3,10 @@
  */
 package com.thinkgem.jeesite.modules.drive.dao;
 
+import java.util.List;
+
+import org.apache.ibatis.annotations.Param;
+
 import com.thinkgem.jeesite.common.persistence.CrudDao;
 import com.thinkgem.jeesite.common.persistence.annotation.MyBatisDao;
 import com.thinkgem.jeesite.modules.drive.entity.OcrDriverTravel;
@@ -14,5 +18,9 @@ import com.thinkgem.jeesite.modules.drive.entity.OcrDriverTravel;
  */
 @MyBatisDao
 public interface OcrDriverTravelDao extends CrudDao<OcrDriverTravel> {
+	
+	OcrDriverTravel findListByCarid(@Param("carid") String carid);
+	
+	List<OcrDriverTravel> findListGroup();
 	
 }

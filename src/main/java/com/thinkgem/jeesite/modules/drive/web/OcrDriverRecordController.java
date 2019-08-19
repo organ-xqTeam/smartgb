@@ -18,12 +18,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.google.gson.Gson;
 import com.thinkgem.jeesite.common.persistence.Page;
+import com.thinkgem.jeesite.common.utils.DateUtils;
 import com.thinkgem.jeesite.common.utils.CoordinationConvertUtil.LatLng;
+import com.thinkgem.jeesite.common.utils.excel.ExportExcel;
 import com.thinkgem.jeesite.common.web.BaseController;
 import com.thinkgem.jeesite.modules.drive.entity.OcrDriverRecord;
+import com.thinkgem.jeesite.modules.drive.entity.OcrDriverWork;
 import com.thinkgem.jeesite.modules.drive.service.OcrDriverRecordService;
 import com.thinkgem.jeesite.modules.drive.service.OcrDriverTravelService;
 
@@ -45,14 +50,39 @@ public class OcrDriverRecordController extends BaseController {
 	private OcrDriverTravelService ocrDriverTravelService;
 	
 	@RequiresPermissions("drive:work:view")
-	@RequestMapping(value = {"list", ""})
+	@RequestMapping(value ="list")
 	public String list(OcrDriverRecord driverRecord, HttpServletRequest request, HttpServletResponse response, Model model) {
 		Page<OcrDriverRecord> page = ocrDriverRecordService.findPage(new Page<OcrDriverRecord>(request, response), driverRecord); 
 		model.addAttribute("page", page);
 		return "modules/drive/ocrDriverRecordList";
 	}
 	
-	@RequestMapping(value = {"travelMap", ""})
+	/**
+	 * 导出报名信息数据
+	 * @param test
+	 * @param request
+	 * @param response
+	 * @param redirectAttributes
+	 * @return
+	 */
+	@RequiresPermissions("drive:work:view")
+    @RequestMapping(value = "export", method=RequestMethod.POST)
+    public String exportFile(OcrDriverRecord testMeet, HttpServletRequest request, HttpServletResponse response, RedirectAttributes redirectAttributes) {
+		try {
+            String fileName = "行程管理数据"+DateUtils.getDate("yyyyMMddHHmmss")+".xlsx";
+            Page<OcrDriverRecord> page = ocrDriverRecordService.findPage(new Page<OcrDriverRecord>(request, response, -1), testMeet);
+    		new ExportExcel("行程管理数据", OcrDriverRecord.class).setDataList(page.getList()).write(response, fileName).dispose();
+//			System.out.println(666);
+//			System.out.println(666);
+//			System.out.println(666);
+    		return null;
+		} catch (Exception e) {
+			addMessage(redirectAttributes, "导出报名信息失败！失败信息："+e.getMessage());
+		}
+		return "redirect:" + adminPath + "/drive/work/?repage";
+    }
+	
+	@RequestMapping(value ="travelMap")
 	public String travelMap(String equipmentImei,String goDate,HttpServletRequest request, HttpServletResponse response, Model model){
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
 		try {

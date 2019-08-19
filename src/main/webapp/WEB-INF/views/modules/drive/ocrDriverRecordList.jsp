@@ -6,7 +6,15 @@
 	<meta name="decorator" content="default"/>
 	<script type="text/javascript">
 		$(document).ready(function() {
-			
+			$("#btnExport").click(function(){
+				top.$.jBox.confirm("确认要导出行程管理数据吗？","系统提示",function(v,h,f){
+					if(v=="ok"){
+						$("#searchForm").attr("action","${ctx}/drive/record/export");
+						$("#searchForm").submit();
+					}
+				},{buttonsFocus:1});
+				top.$('.jbox-body .jbox-icon').css('top','55px');
+			});
 		});
 		function page(n,s){
 			$("#pageNo").val(n);
@@ -15,8 +23,8 @@
 			return false;
 		}
 		function resetBtn() {
-				$("#workDateStar").val('');
-				$("#workDateEnd").val('');
+				$("#recordDateStar").val('');
+				$("#recordDateEnd").val('');
 		}
 	</script>
 </head>
@@ -24,7 +32,7 @@
 	<ul class="nav nav-tabs">
 		<li class="active"><a href="${ctx}/drive/record/">行驶列表</a></li>
 	</ul>
-	<form:form id="searchForm" modelAttribute="ocrDriverRecord" action="${ctx}/drive/record/" method="post" class="breadcrumb form-search">
+	<form:form id="searchForm" modelAttribute="ocrDriverRecord" action="${ctx}/drive/record/list/" method="post" class="breadcrumb form-search">
 		<input id="pageNo" name="pageNo" type="hidden" value="${page.pageNo}"/>
 		<input id="pageSize" name="pageSize" type="hidden" value="${page.pageSize}"/>
 		<input id="orderBy" name="orderBy" type="hidden" value="${page.orderBy}"/>
@@ -35,12 +43,13 @@
 					value="<fmt:formatDate value="${ocrDriverRecord.recordDateStar}" pattern="yyyy-MM-dd"/>"
 						onclick="WdatePicker({dateFmt:'yyyy-MM-dd'});"/>
 				
-				<input id="recordDateEnd" name="workDateEnd" type="text" readonly="readonly" maxlength="20" class="input-medium Wdate" style="width:163px;"
+				<input id="recordDateEnd" name="recordDateEnd" type="text" readonly="readonly" maxlength="20" class="input-medium Wdate" style="width:163px;"
 					value="<fmt:formatDate value="${ocrDriverRecord.recordDateEnd}" pattern="yyyy-MM-dd"/>"
 						onclick="WdatePicker({dateFmt:'yyyy-MM-dd'});"/>
 			</li>
 			<li class="btns"><input id="btnSubmit" class="btn btn-primary" type="submit" value="查询"/></li>
 			<li class="btns"><input id="" class="btn btn-primary" value="重置" type="button" onclick="javascript:resetBtn();"/></li>
+			<li class="btns"><input id="btnExport" class="btn btn-primary" type="button" value="导出"/></li>
 			<li class="clearfix"></li>
 		</ul>
 	</form:form>

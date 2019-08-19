@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.garbage.dao.CarbinInfoDao">
+	
+	<sql id="gbInfoColumns">
+		a.id AS "id",
+		a.carnum AS "carnum",
+		a.latitude AS "latitude",
+		a.longitude AS "longitude",
+		a.create_date AS "createDate",
+		a.update_date AS "updateDate"
+	</sql>
+	
+	<select id="findList" resultType="com.thinkgem.jeesite.modules.garbage.entity.CarbinInfo">
+		SELECT 
+			<include refid="gbInfoColumns"/>
+		FROM smart_carbin_info a
+		<where>
+			1 = 1
+			<if test="dtuId != null and dtuId != ''">
+				AND a.dtu_id LIKE 
+					<if test="dbName == 'oracle'">'%'||#{realName}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{realName}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{dtuId},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+</mapper>

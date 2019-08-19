@@ -3,6 +3,7 @@ package com.thinkgem.jeesite.modules.drive.entity;
 import java.util.Date;
 
 import com.thinkgem.jeesite.common.persistence.DataEntity;
+import com.thinkgem.jeesite.common.utils.excel.annotation.ExcelField;
 
 /**
  * 
@@ -15,24 +16,36 @@ public class OcrDriverWork extends DataEntity<OcrDriverWork>{
 
 	private String id;
 	
+	@ExcelField(title="姓名",align=2, sort=20)
 	private String name;
 	
+
+	@ExcelField(title="姓名",align=2, sort=20)
 	private String sex;
-	
+
+	@ExcelField(title="联系电话",align=2, sort=20)
 	private String phone;
-	
+
+	@ExcelField(title="身份证号",align=2, sort=20)
 	private String idNum;
-	
+
+	@ExcelField(title="驾驶员编号",align=2, sort=20)
 	private String driveNum;
+
 	
+	@ExcelField(title="司机所在地",align=2, sort=20)
 	private String position;
+
 	
+	@ExcelField(title="上班时间",align=2, sort=20)
 	private Date onWork;
+
 	
+	@ExcelField(title="下班时间",align=2, sort=20)
 	private Date offWork;
-	
+
 	private Date workDateStar;
-	
+
 	private Date workDateEnd;
 	
 	public String getId() {

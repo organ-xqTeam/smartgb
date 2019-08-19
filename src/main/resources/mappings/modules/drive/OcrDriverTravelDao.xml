@@ -185,4 +185,19 @@
 		WHERE id = #{id}
 	</update>
 	
+	<select id="findListGroup" resultType="OcrDriverTravel">
+		SELECT 
+			<include refid="driverTravelColumns"/> 
+		from ocr_driver_travel a
+		group by a.car_id
+	</select>
+	
+	<select id="findListByCarid" resultType="OcrDriverTravel">
+		select <include refid="driverTravelColumns"/> 
+		from ocr_driver_travel  a
+		where a.car_id=#{carid}
+		group by a.car_time desc
+		limit 0,1
+	</select>
+	
 </mapper>
